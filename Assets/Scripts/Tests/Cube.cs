@@ -9,19 +9,19 @@ namespace Game.Tests
         [SerializeField]private float destroyTime = 5.0f;
         [SerializeField]private Vector3 centreOfMass = Vector3.zero;
 
-        private Rigidbody _rb;
+        private Rigidbody cubeRB;
         private IEnumerator DestroyCube()
         {
             yield return new WaitForSeconds(destroyTime);
             Destroy(gameObject);
         }
         private void Awake() {
-            _rb = GetComponent<Rigidbody>();
+            cubeRB = GetComponent<Rigidbody>();
         }
         // Start is called before the first frame update
         void Start()
         {
-            _rb.centerOfMass = centreOfMass;
+            cubeRB.centerOfMass = centreOfMass;
             StartCoroutine(DestroyCube());
         }
 

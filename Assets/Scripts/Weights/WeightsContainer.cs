@@ -6,24 +6,55 @@ namespace Game.Weights
 {
     public class WeightsContainer : MonoBehaviour
     {
-        [SerializeField]private float checkInterval = 1;
-
         [SerializeField]private Vector3 offset;
         [SerializeField]private Vector3 checkSize = Vector3.one;
-        [SerializeField]private Transform forceOrigin;
-        [SerializeField]private float distanceFromForceOrigin = 2.0f;
-        private Collider[] _colliders;
+        [SerializeField]private LayerMask detectMask;
+        [SerializeField]private Transform connectedLocation;
 
-        private int _collidersCount = 0;
 
-        public Transform ForceOrigin { get => forceOrigin; }
+        private LineRenderer _wireRenderer;
+
+        public void ResetWeights()
+        {
+            var colliders = Physics.OverlapBox(transform.position + offset, checkSize/2f, transform.rotation, detectMask.value);
+            for(int i = 0; i < colliders.Length; i++)
+            {
+                Destroy(colliders[i].gameObject);
+            }
+        }
+
+        public List<Rigidbody> GetAllWeights()
+        {
+            var result = new List<Rigidbody>();
+            var colliders = Physics.OverlapBox(transform.position + offset, checkSize/2f, transform.rotation, detectMask.value);
+            for(int i = 0; i < colliders.Length; i++)
+            {
+                if(colliders[i].transform.TryGetComponent<Rigidbody>(out Rigidbody weightRB))
+                {
+                    result.Add(weightRB);
+                }
+            }
+            return result;
+        }
+
+        public float GetTotalMass(List<Rigidbody> weights)
+        {
+            float result = 0.0f;
+            for(int i = 0; i < weights.Count; i++)
+            {
+                var current = weights[i];
+                result += current.mass;
+            }
+            return result;
+        }
 
         public float GetTotalMass()
         {
             float result = 0.0f;
-            for(int i = 0; i < _collidersCount; i++)
+            var colliders = Physics.OverlapBox(transform.position + offset, checkSize/2f, transform.rotation, detectMask.value);
+            for(int i = 0; i < colliders.Length; i++)
             {
-                if(_colliders[i].transform.TryGetComponent<Rigidbody>(out Rigidbody weightRB))
+                if(colliders[i].transform.TryGetComponent<Rigidbody>(out Rigidbody weightRB))
                 {
                     result += weightRB.mass;
                 }
@@ -32,34 +63,20 @@ namespace Game.Weights
             return result;
         }
 
-        private IEnumerator ScanWeights()
-        {
-            while(this.enabled)
-            {
-                _collidersCount = Physics.OverlapBoxNonAlloc(transform.position + offset, checkSize/2f, _colliders, transform.rotation);
-                yield return new WaitForSeconds(checkInterval);
-            }
-        }
-
         private void Awake() {
-            _colliders = new Collider[10];
+            _wireRenderer = GetComponent<LineRenderer>();
         }
 
-        private void Start() 
+        private void Update() 
         {
-            StartCoroutine(ScanWeights());    
+            
+            _wireRenderer.SetPosition(0, transform.position);
+            _wireRenderer.SetPosition(1, connectedLocation.position);    
         }
-
-        private void FixedUpdate() {
-            transform.position = forceOrigin.position + Vector3.up * distanceFromForceOrigin;
-        }
-
         private void OnDrawGizmosSelected() 
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCube(transform.position + offset, checkSize);    
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(forceOrigin.position, forceOrigin.position + Vector3.up * distanceFromForceOrigin);
+            Gizmos.DrawWireCube(transform.position + offset, checkSize);
         }
         
     }

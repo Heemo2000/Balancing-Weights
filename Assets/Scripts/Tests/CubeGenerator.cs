@@ -7,24 +7,31 @@ namespace Game.Tests
     public class CubeGenerator : MonoBehaviour
     {
         [SerializeField]private Camera lookCamera;
-        [SerializeField]private Cube cubePrefab;
+        
+        [SerializeField]private Cube[] cubePrefabs;
 
-        private Plane _lookPlane;
+        private Plane lookPlane;
+        private int cubeIndex = 0;
+
+        public void SetCubeToGenerateIndex(int index)
+        {
+            cubeIndex = index;
+        }
 
         private void Awake() {
-            _lookPlane = new Plane(transform.forward, transform.position);
+            lookPlane = new Plane(transform.forward, transform.position);
         }
 
         // Update is called once per frame
         void Update()
         {
-            if(Input.GetMouseButtonDown(0))
+            if(Input.GetMouseButtonDown(1))
             {
                 Ray ray = lookCamera.ScreenPointToRay(Input.mousePosition);
-                if(_lookPlane.Raycast(ray, out float distance))
+                if(lookPlane.Raycast(ray, out float distance))
                 {
                     Vector3 spawnPosition = ray.origin + ray.direction * distance;
-                    Instantiate(cubePrefab, spawnPosition, Quaternion.identity);
+                    Instantiate(cubePrefabs[cubeIndex], spawnPosition, Quaternion.identity);
                 }
             }
             
